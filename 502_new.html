@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>다모앙 서비스 일시 중지 - 502 오류</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/gh/meenie/band.js@1.1.2/dist/band.min.js"></script>
+    <style>
+        body {
+		    height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: top;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #f0f0f0;
+        }
+		
+        .notice {
+            margin-top: 36px;
+			margin-bottom: 20px;
+            text-align: left;
+        }
+        .notice h1 {
+            color: #333;
+            margin-top: 8px;
+			line-height: 1.25;
+			letter-spacing:-0.03125em;
+        }
+        .notice p {
+            color: #333;
+            line-height: 1.6;
+			letter-spacing:-0.03125em;
+			font-weight: 500;
+        }
+        canvas {
+		    border-radius: 8px;
+            border: 1px solid #333333;
+        }
+        .scoreboard, .infoboard {
+		    display: flex;
+			flex-grow: 3;
+			justify-content: space-around;
+            padding: 8px;
+			border-radius: 8px;
+			border: 2px solid #cbcbcb;
+
+        }
+        .scoreboard span, .infoboard span {
+		    font-family: 'Noto Sans KR', sans-serif;
+			font-weight: bold;
+
+        }
+        .score-btn {
+            flex-grow: 2;
+            padding: 8px;
+            font-size: 16px;
+            display: block;
+            background-color: #ffe01b;
+            color: #333;
+            border-radius: 8px;
+			border: 2px solid #333333;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+			font-weight: bold;
+        }
+        .score-btn:hover {
+            background-color: #ff881b;
+        }
+		.score-dp, .info-dp {
+		    display: flex;
+			gap: 12px;
+		}
+        .score-dp {
+			margin-bottom: 12px;
+		}
+		.game-dp {
+		    height: fit-content; 
+            width: max-content;
+		    padding: 16px;
+		    background-color: #fefefe;
+			border-radius: 16px;
+			border: 2px solid #333333;
+			box-shadow: 6px 6px 0 0 #a5a5a5;
+            position: relative;
+		}
+        .modal {
+            display: none;
+            position: absolute;
+            background-color: rgba(0,0,0,0);
+            justify-content: center;
+            align-items: center;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            height: 300px;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border: 2px solid #888;
+            text-align: center;
+            border-radius: 10px;
+        }
+		.modal-content span {
+		    font-family: 'Noto Sans KR', sans-serif;
+			font-weight: bold;
+        }
+        .modal-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+			font-family: 'Noto Sans KR', sans-serif;
+			font-weight: bold;
+
+        }
+		.modal-flex {
+		    display: flex;
+			justify-content: space-around;
+			gap: 8px;
+	    }
+			
+        .modal-btn:hover {
+            background-color: #0056b3;
+        }
+        .modal-btn.quit {
+            background-color: #dc3545;
+        }
+        .modal-btn.quit:hover {
+            background-color: #c82333;
+        }
+		
+		#main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+			margin-top: 36px;
+			margin-bottom: 36px;
+			justify-content: center;
+        }
+		
+		#bottom-half {
+			width: 100%;
+			height: 100%;
+			padding-top: 44px;
+			padding-bottom: 44px;
+            display: flex;
+			justify-content: center;
+            align-items: center;
+			background-color: #d9d9d9;
+        }
+		
+        /* #gameCanvas {
+            width: 550px;
+            height: 550px;
+        } */
+
+        #mobileControls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .controls-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .vertical-controls {
+            display: flex;
+            flex-direction: column;
+            margin: 0 3px;
+        }
+
+        .toggle-sfx {
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-sfx button {
+            border: none;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            height: 28px;
+            width: 28px;
+            background: none;
+        }
+
+        span.hidden-sm {
+            font-weight: normal !important;
+        }
+
+        #mobileControls button {
+			font-family: 'Noto Sans KR', sans-serif;
+			font-weight: bold;
+            font-size: 24px;
+            margin: 3px;
+            background-color: #ffe01b;
+            color: #333;
+            border: none;
+            border-radius: 10%;
+            cursor: pointer;
+        }
+
+        #mobileControls #leftBtn, #mobileControls #rightBtn {
+            width: 100px;
+            height: 120px;
+        }
+
+        #mobileControls #upBtn, #mobileControls #downBtn {
+            width: 90px;
+            height: 90px;
+        }
+
+        #snakeHeadSvg {
+            display: none;
+        }
+
+        .top-area {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #boxCount {
+            padding: 2px 5px;
+        }
+
+        /* #chat-main {
+			width: 100%;
+			height: 100%;
+			padding-top: 44px;
+			padding-bottom: 44px;
+            display: flex;
+			justify-content: center;
+			background-color: #363636;
+        } */
+
+        #chat-main {
+            display: flex;
+            padding: 0px 30px;
+            width: 460px;
+        }
+        .chat-frame {
+		    height: 700px;
+            width: 100%;
+            max-width: 460px;
+		    padding: 16px;
+		    background-color: #fefefe;
+			border-radius: 16px;
+			border: 2px solid #333333;
+			box-shadow: 6px 6px 0 0 #a5a5a5;
+            position: relative;
+		}
+
+        @media (min-width: 811px) {
+            #mobileControls {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 810px) {
+		    #main {
+			    display: block;
+				text-align: center;
+			}
+			.notice {
+			    text-align: center;
+				margin-top: 20px;
+                padding-left: 1rem;
+                padding-right: 1rem;
+			}
+            .game-dp {
+                max-height: none;
+                /* margin-bottom: 30px; */
+                margin: 0px 5px 30px 5px;
+            }
+
+            #chat-main {
+                padding: 0px;
+                width: 100%;
+                justify-content: center;
+            }
+
+            #bottom-half {
+                flex-direction: column;
+                justify-content: normal;
+                /* align-items: normal; */
+            }
+	    }
+
+
+        @media (max-width: 480px) {
+            #gameCanvas {
+                width: 300px;
+                height: 300px;
+            }
+
+            .err-sm {
+                display: block;
+            }
+            .hidden-sm {
+                display: none;
+            }
+        }
+
+        @media (max-width: 360px) {
+            #da-err-502 {
+                width: 200px;
+                height: 140px;
+            }
+            #gameCanvas {
+                width: 252px;
+                height: 252px;
+            }
+            .scoreboard, .infoboard {
+                font-size: .8rem;
+            }
+            .score-btn {
+                font-size: 14px;
+            }
+        }
+		@media (prefers-color-scheme: dark) {
+            body, #boxCount {
+                background: #363636;
+                color: #f2f2f2;
+            }
+
+            .notice h1, .notice p {
+                color: #fff;
+            }
+
+            #bottom-half {
+                background-color: #262626;
+            }
+
+            .game-dp, .chat-frame {
+                background-color: #505050;
+                box-shadow: 6px 6px 0 0 #404040;
+            }
+
+            .scoreboard, .infoboard {
+                border: 2px solid #333333;
+            }
+
+            .modal-content {
+                background-color: #303030;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="main">
+        <svg id="da-err-502" width="320" height="218" viewBox="0 0 468 320"> <style> .err-b { fill: #000; } .err-b, .err-c, .err-d, .err-e, .err-f { stroke-width: 0px; } .err-c { fill: #ffe01b; } .err-d { fill: #bc588f; } .err-e { fill: #fff; } .err-f { fill: #ffe01b; } </style> <path class="err-b" d="M441.32,123.64c-.94-4.6-2.38-8.92-4.8-12.7-7.97-12.22-16.03-24.39-24.05-36.61-10.07-17.35-29.4-17.39-47.38-16.33-12.43.82-33.82,2.36-45.67,3.17-3.15.27-4.92.18-7.95.77-5.21,1.04-9.52,3.51-12.29,7.63-.61.9-1.4,1.64-2.03.37-8.96-14.49-18.34-28.6-27.97-42.61-3.86-4.48-10.25-6.49-16.01-4.94-3.4.88-6.4,2.94-8.5,5.6-.37.39-.88,1.03-1.41.99-1.36-.43-2.25-2.72-3.52-3.68-6.43-6.51-18.11-5.65-23.5,1.79-1.1,1.04-1.59,3.35-2.8,4.1-.59.2-1.14-.48-1.57-.85-4.8-5.26-13.33-6.51-19.49-2.88-7.12,4.07-9.05,11.85-7.21,19.47.5,3.19,1.28,8.1,1.75,11.12.41,3.02.97,5.9,2.55,8.53,1.41,2.39,2.94,4.52,4.35,6.75.81,1.16.47,2.17-.79,2.83-10.38,5.34-19.46,13.08-25.88,22.33-.4.53-.96,1.41-1.48,1.54-.37.12-.72-.05-1.07-.45-1.02-1.32-1.9-2.84-2.87-4.26-3.04-4.6-5.99-9.15-9.09-13.78-1.13-1.62-2.48-3.18-4.06-4.34-8.07-5.35-13.76-2.74-27.17-2.24-23.78,1.66-67,4.66-71.54,4.99-.22.02-.6.05-1.28.15-.64.1-1.66.27-2.41.45-4.23.97-7.03,2.95-8.88,4.91-3.25,3.36-4.9,8.36-5.14,13.03-.21,3.96-2.23,42.56-3.33,63.64-.29,9.37-.85,11.31-.68,15.58.14,4.25,1.48,7.81,3.86,11.13,2.91,4.44,5.92,8.98,8.82,13.43.56.86.65,1.69-.63,1.97-8.15.71-15.74,6.39-17.24,14.51-.94,6.21-.85,14.92-1.39,21.8-.21,2.93-.31,4.96.49,8.17.64,2.42,2.02,4.56,3.39,6.6,7.6,11.55,15.18,23.08,22.78,34.63,5,8.53,12.52,9.99,22.18,8.8,8.77-.61,27.48-1.91,38.24-2.66,24.26-1.29,48.83-5.02,62.49-25.91,2.75-4.17,4.78-8.82,6.26-13.68.26-.82.53-1.43.86-1.55.59-.17.99.68,1.32,1.1,2.85,4.25,5.4,8.37,8.38,12.62,12.49,17.64,34.61,24.18,56.18,22.4,23.55-1.33,43.5-9.69,57.57-27.24,1.03-1.45,2.08-2.06,3.13-.32,3.14,4.38,5.6,9.46,9.42,13.36,1.76,1.57,4.31,3.1,7.9,3.71,1.5.33,4.03.35,5.13.28,6.29-.53,87.82-5.98,94.2-6.64,4.7-.64,9.13-2.77,12.2-6.37,3.34-3.72,4.46-8.51,4.47-13.32.17-4.16.64-11.57.85-16.23.68-5.39-.39-10.2-3.57-14.51-5.7-8.69-11.44-17.35-17.09-26.01-1.54-2.21,1.02-4.11,2.35-5.79,3.46-4.06,7.19-8.59,10.21-12.98,10.73-15.29,13.63-37.03,10.43-55.2l-.04-.19Z" /> <path class="err-c" d="M203.06,63.36c-2.34,0-4.4-1.67-4.79-4.01-.78-4.94-1.56-9.89-2.77-17.58-.39-2.56,1.39-4.96,4.07-5.35,2.62-.39,5.13,1.34,5.52,3.96,1.21,7.7,1.99,12.64,2.77,17.58.39,2.56-1.39,4.96-4.07,5.35h-.72v.06Z" /> <path class="err-c" d="M253.12,60.35c-.33,0-.72,0-1.06-.11-2.62-.56-4.29-3.07-3.68-5.63,1.15-5.11,2.3-10.22,4.07-18.05.56-2.56,3.23-4.18,5.8-3.57,2.62.56,4.29,3.07,3.68,5.63-1.77,7.83-2.92,12.94-4.07,18.05-.5,2.17-2.51,3.68-4.74,3.68Z" /> <path class="err-f" d="M228.09,59.41h-.17c-2.68-.11-4.79-2.29-4.68-4.91.19-5.11.37-10.22.66-18.12.11-2.62,2.62-4.63,5.02-4.52,2.68.11,4.79,2.29,4.68,4.91-.29,7.9-.47,13.01-.66,18.12-.11,2.56-2.23,4.52-4.85,4.52Z" /> <path class="err-e" d="M126.94,149.96c-6.07-2.16-13.14-2.97-21.2-2.4l-21.64,2.43,1.43-27.26,49.89-3.48c2.23-.16,4.03-.86,5.4-2.13,1.37-1.26,2.09-2.76,2.18-4.49l1.16-22.07c.09-1.73-.48-3.14-1.73-4.22-1.24-1.08-2.98-1.55-5.21-1.39l-86.74,6.04c-2.48.17-4.29.95-5.41,2.32-1.12,1.37-1.74,3.17-1.86,5.4l-4.07,77.71c-.12,2.23.32,3.95,1.31,5.17.99,1.23,2.72,1.75,5.2,1.58l46.35-3.23c2.98-.21,5.3.34,6.96,1.64,1.66,1.3,2.4,3.75,2.21,7.33l-.63,12.06c-.16,3.09-1.35,5.64-3.55,7.64-2.21,2-6.1,3.2-11.69,3.59l-44.12,3.07c-2.23.16-4.03.87-5.4,2.13-1.36,1.27-2.09,2.76-2.18,4.49l-1.16,22.07c-.09,1.73.48,3.14,1.73,4.22,1.24,1.09,2.98,1.55,5.21,1.39l51.38-3.58c10.8-.75,20.08-2.69,27.85-5.82,7.77-3.13,13.84-8.08,18.21-14.85,4.37-6.77,6.86-15.84,7.45-27.22l.77-14.65c.49-9.27-.89-16.63-4.13-22.07-3.24-5.44-7.89-9.24-13.96-11.41Z" /> <path class="err-e" d="M277.01,99.41c-4.28-7.27-10.45-12.76-18.5-16.49-8.05-3.73-18.38-5.15-30.98-4.27s-23.54,3.82-32.11,8.76c-8.57,4.95-15.39,11.35-20.46,19.2-5.07,7.86-8.83,16.76-11.26,26.69-2.44,9.94-3.94,20.35-4.51,31.23-.57,10.88-.09,21.15,1.43,30.81,1.53,9.66,4.49,18.12,8.89,25.38,4.4,7.26,10.63,12.75,18.68,16.48,8.05,3.73,18.32,5.16,30.8,4.29,12.72-.89,23.33-3.77,31.84-8.65,8.51-4.88,15.3-11.28,20.37-19.2,5.08-7.92,8.83-16.84,11.27-26.78,2.43-9.94,3.94-20.35,4.51-31.23.58-11,.13-21.3-1.34-30.91-1.47-9.61-4.35-18.04-8.63-25.31Z" /> <path class="err-e" d="M401.09,191.93c-1.24-1.08-2.98-1.55-5.21-1.39l-54.54,3.8c2.09-2.24,5-5.25,8.73-9.02,3.72-3.77,7.84-7.97,12.34-12.59,4.51-4.63,9.02-9.34,13.54-14.16,4.52-4.81,8.69-9.48,12.51-13.99,3.82-4.52,6.87-8.52,9.16-12,2.55-3.87,4.55-8.48,6.01-13.82,1.45-5.34,2.29-10.75,2.52-16.25.22-5.5-.1-10.56-.97-15.18-.87-4.62-2.35-8.15-4.45-10.59-3.38-3.95-7.95-6.38-13.71-7.27-5.77-.89-13.43-1-22.98-.34l-49.51,3.45c-2.24.28-4.01.96-5.3,2.03-1.29,1.08-2,2.85-2.13,5.32l-1.08,20.59c-.13,2.47.4,4.19,1.58,5.16,1.18.97,2.9,1.37,5.13,1.21l43.56-3.03c2.61-.18,4.51.06,5.71.71,1.2.66,1.95,1.65,2.25,2.98.52,1.81.32,3.92-.61,6.33-.93,2.41-2.13,4.74-3.61,7-1.48,2.26-2.89,4.3-4.21,6.11-5.31,6.9-11.1,13.62-17.38,20.15-6.28,6.54-12.51,12.85-18.7,18.95-6.19,6.1-11.98,12.05-17.35,17.84-1.71,1.85-3.14,3.92-4.31,6.21-1.17,2.3-1.83,4.87-1.98,7.71l-1.42,27.08c-.24,4.58,1.81,6.71,6.16,6.41l93.26-6.5c2.23-.16,4.03-.86,5.4-2.13,1.36-1.26,2.09-2.76,2.18-4.49l1.16-22.07c.09-1.73-.48-3.14-1.73-4.22Z" /> <path class="err-d" d="M220.19,199.36c6.65-.46,12.56-6.5,12.9-13.17l.58-11.09-23.3,1.63-.64,12.32c-.16,3.03.83,5.76,2.79,7.68,1.95,1.91,4.67,2.86,7.67,2.64Z" /> <path class="err-b" d="M180.21,156.68c.97.93,2.21,1.39,3.46,1.39,1.31,0,2.63-.52,3.61-1.54l9.31-9.71,7.95,8.06c.98.99,2.27,1.49,3.56,1.49s2.54-.48,3.51-1.44c1.97-1.94,1.99-5.1.05-7.07l-8.14-8.26,9.51-9.92c1.91-1.99,1.84-5.16-.15-7.07-1.99-1.91-5.16-1.84-7.07.15l-9.31,9.71-7.95-8.06c-1.94-1.97-5.11-1.99-7.07-.05-1.97,1.94-1.99,5.1-.05,7.07l8.14,8.26-9.51,9.92c-1.91,1.99-1.84,5.16.15,7.07Z" /> <path class="err-b" d="M257.21,135.84l9.51-9.92c1.91-1.99,1.84-5.16-.15-7.07-1.99-1.91-5.16-1.84-7.07.15l-9.31,9.71-7.95-8.06c-1.94-1.97-5.11-1.99-7.07-.05-1.97,1.94-1.99,5.1-.05,7.07l8.14,8.26-9.51,9.92c-1.91,1.99-1.84,5.16.15,7.07.97.93,2.21,1.39,3.46,1.39,1.32,0,2.63-.52,3.61-1.54l9.31-9.71,7.95,8.06c.98.99,2.27,1.49,3.56,1.49s2.54-.48,3.51-1.44c1.97-1.94,1.99-5.1.05-7.07l-8.14-8.26Z" /> <path class="err-b" d="M261.16,163.15l-78.44,5.49c-2.75.19-4.83,2.58-4.64,5.34.18,2.64,2.38,4.65,4.98,4.65.12,0,.24,0,.35-.01l16.91-1.18-.58,11.09c-.31,5.93,1.74,11.38,5.77,15.33,3.67,3.6,8.53,5.54,13.83,5.54.51,0,1.03-.02,1.54-.05,11.82-.83,21.57-10.77,22.19-22.63l.64-12.32,18.13-1.27c2.75-.19,4.83-2.58,4.64-5.34-.19-2.75-2.59-4.82-5.34-4.64ZM233.1,186.19c-.35,6.68-6.26,12.71-12.9,13.17-2.99.22-5.72-.73-7.67-2.64-1.96-1.92-2.95-4.65-2.79-7.68l.64-12.32,23.3-1.63-.58,11.09Z" /> </svg>
+        <div class="notice">
+            <h1><span>다모앙 서비스 </span><span class="err-sm">일시 중지 안내</span></h1>
+            <p>
+                더 나은 다모앙을 위해 서버 작업을 진행하고 있습니다.<br />
+                작업완료까지 시간이 다소 걸릴 수 있어요.<br />
+                기다리시는 동안 아래의 스네이크 게임을 즐겨주세요!
+            </p>
+        </div>
+    </div>
+    <div id="bottom-half">
+        <div class="game-dp">
+            <div class="top-area">
+                <div>
+                    <label for="boxCount">박스 사이즈:</label>
+                    <select id="boxCount"></select>
+                </div>
+                <div class="toggle-sfx">
+                    <button aria-label="Toggle SFX current on" id="toggle-sfx-enable" onclick="toggleSfx(true)"><svg viewBox="0 0 24 24" width="28" height="28"><path d="M18.2 4.4c-.3.4-.3.9.1 1.2 1.9 1.5 3 3.8 3 6.4s-1.1 4.9-3 6.4c-.4.3-.4.8-.1 1.2.3.3.8.4 1.1.1 2.3-1.8 3.7-4.6 3.7-7.7s-1.4-5.9-3.7-7.7c-.3-.3-.8-.2-1.1.1zM16.1 7c-.3.3-.2.9.1 1.1 1.1 1 1.8 2.3 1.8 3.9s-.7 2.9-1.8 3.9c-.3.2-.4.8-.1 1.1.3.4.8.4 1.2.1 1.4-1.2 2.4-3 2.4-5.1s-1-3.9-2.4-5.1c-.4-.3-.9-.3-1.2.1zM14 9.5c-.3.4-.2.9.1 1.2.4.3.7.8.7 1.3s-.3 1-.7 1.3c-.3.3-.4.8-.1 1.1.3.4.8.5 1.2.2.7-.6 1.2-1.6 1.2-2.6s-.5-2-1.2-2.6c-.4-.3-.9-.2-1.2.1zm-3.8-4.9L5.5 8.7H3.2A2.22 2.22 0 0 0 1 10.9v2.2a2.22 2.22 0 0 0 2.2 2.2h2.3l4.7 4.1c.3.3.8.4 1.2.2.3-.1.6-.5.6-1V5.4c0-.5-.3-.9-.6-1-.4-.2-.9-.1-1.2.2z"/></svg></button>
+                    <button aria-label="Toggle SFX current off" id="toggle-sfx-disable" onclick="toggleSfx(true)"><svg viewBox="0 0 24 24" width="28" height="28"><path d="M11.4 4.2c.4.2.7.6.7 1v13.6c0 .4-.3.8-.7 1s-.9.1-1.2-.2l-4.6-4.2H3.2c-1.2 0-2.2-1-2.2-2.3v-2.2c0-1.3 1-2.3 2.2-2.3h2.4l4.6-4.2c.3-.3.8-.4 1.2-.2zm4.3 4.7l1.9 1.9 1.9-1.9a.75.75 0 0 1 1.2 0c.3.3.3.8 0 1.2L18.8 12l1.9 1.9c.3.4.3.9 0 1.2-.4.4-.9.4-1.2 0l-1.9-1.9-1.9 1.9a.75.75 0 0 1-1.2 0c-.3-.3-.3-.8 0-1.2l1.9-1.9-1.9-1.9c-.3-.4-.3-.9 0-1.2.4-.4.9-.4 1.2 0z"/></svg></button>
+                </div>
+            </div>
+            <div>
+                <div class="score-dp">
+                    <button class="score-btn" onclick="startGame()">시작</button>
+                    <div class="scoreboard">
+                        <div><span class="hidden-sm">현재 </span>점수 : <span id="currentScore">0</span></div>
+                        <div>최고<span class="hidden-sm"> 점수</span> : <span id="highScore">0</span></div>
+                    </div>
+                </div>
+                <canvas id="gameCanvas" width="450px" height="450px"></canvas>
+                <div class="info-dp">
+                    <div class="infoboard">
+                        <div>현재 속도 : <span id="currentSpeed">0</span></div>
+                        <div>이동 횟수 : <span id="currentMove">0</span></div>
+                    </div>
+                </div>
+    
+                <div id="mobileControls">
+                    <div class="controls-row">
+                        <button id="leftBtn" aria-label="leftBtn" class="controls-btn">
+                            <svg viewBox="0 0 18 18" width="18" height="18"><g transform="rotate(180, 9, 9)"><path fill-rule="evenodd" d="M16.6 9.7c.4-.4.4-1.1 0-1.6l-5.7-5.7c-.5-.4-1.2-.4-1.6 0-.5.5-.5 1.2 0 1.6L13 7.8H2.1A1.11 1.11 0 0 0 1 8.9c0 .6.5 1.2 1.1 1.2H13l-3.7 3.7c-.5.4-.5 1.2 0 1.6.4.4 1.1.4 1.6 0z" /></g></svg>
+                        </button>
+                        <div class="vertical-controls">
+                            <button id="upBtn" aria-label="upBtn" class="controls-btn">
+                                <svg viewBox="0 0 18 18" width="18" height="18"><g transform="rotate(-90, 9, 9)"><path fill-rule="evenodd" d="M16.6 9.7c.4-.4.4-1.1 0-1.6l-5.7-5.7c-.5-.4-1.2-.4-1.6 0-.5.5-.5 1.2 0 1.6L13 7.8H2.1A1.11 1.11 0 0 0 1 8.9c0 .6.5 1.2 1.1 1.2H13l-3.7 3.7c-.5.4-.5 1.2 0 1.6.4.4 1.1.4 1.6 0z"/></g></svg>
+                            </button>
+                            <button id="downBtn" aria-label="downBtn" class="controls-btn">
+                                <svg viewBox="0 0 18 18" width="18" height="18"><g transform="rotate(90, 9, 9)"><path fill-rule="evenodd" d="M16.6 9.7c.4-.4.4-1.1 0-1.6l-5.7-5.7c-.5-.4-1.2-.4-1.6 0-.5.5-.5 1.2 0 1.6L13 7.8H2.1A1.11 1.11 0 0 0 1 8.9c0 .6.5 1.2 1.1 1.2H13l-3.7 3.7c-.5.4-.5 1.2 0 1.6.4.4 1.1.4 1.6 0z"/></g></svg>
+                            </button>
+                        </div>
+                        <button id="rightBtn" aria-label="rightBtn" class="controls-btn">
+                            <svg viewBox="0 0 18 18" width="18" height="18"><g transform="rotate(0, 9, 9)"><path fill-rule="evenodd" d="M16.6 9.7c.4-.4.4-1.1 0-1.6l-5.7-5.7c-.5-.4-1.2-.4-1.6 0-.5.5-.5 1.2 0 1.6L13 7.8H2.1A1.11 1.11 0 0 0 1 8.9c0 .6.5 1.2 1.1 1.2H13l-3.7 3.7c-.5.4-.5 1.2 0 1.6.4.4 1.1.4 1.6 0z"/></g></svg>
+                        </button>
+                    </div>
+                </div>
+    
+                <div id="gameOverModal" class="modal">
+                    <div class="modal-content">
+                        <h2>게임 오버!</h2>
+                        <p>점수 : <span id="finalScore"></span></p>
+                        <div class="modal-flex">
+                            <button class="modal-btn" onclick="restartGame()">다시 시작</button>
+                            <button class="modal-btn quit" onclick="quitGame()">그만하기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <svg id="snakeHeadSvg" class="snake-head-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15">
+                    <style> 
+                        svg#snakeHeadSvg .head-b {
+                            fill: #000;
+                        }
+                        svg#snakeHeadSvg .head-b, svg#snakeHeadSvg .head-c {
+                            stroke-width: 0px;
+                        }
+                        svg#snakeHeadSvg .head-c {
+                            fill: #ffe01b;
+                        }
+                    </style>
+                <rect class="head-c" width="15" height="15" />
+                <path class="head-b" d="M3.75,2.5h3.75v1.25h1.25v2.5h-1.25v1.25h-3.75v-1.25h-1.25v-2.5h1.25v-1.25ZM7.5,3.75h-3.75v2.5h3.75v-2.5ZM5,8.75h5v1.25h1.25v1.25h-1.25v1.25h-5v-1.25h-1.25v-1.25h1.25v-1.25ZM10,10h-5v1.25h5v-1.25ZM10,2.5h1.25v1.25h1.25v1.25h-1.25v2.5h-1.25V2.5Z" />
+            </svg>
+        </div>
+        <div id="chat-main" class="chat-main">
+            <iframe src="http://localhost:4000" class="chat-frame" title="앙톡" frameborder="0"></iframe>
+        </div>
+    </div>
+    <script>
+        const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const modal = document.getElementById("gameOverModal");
+        const modalContent = document.querySelector(".modal-content");
+        const boxCountSelect = document.getElementById("boxCount");
+        const toggleSfxEnable = document.getElementById("toggle-sfx-enable");
+        const toggleSfxDisable = document.getElementById("toggle-sfx-disable");
+        const gameSfx = {
+            create: (tsig, tempo) => {
+                const o = new BandJS();
+                o.setTimeSignature(tsig[0], tsig[1]);
+                o.setTempo(tempo);
+                return o;
+            },
+            eatFood: () => {
+                const conductor = gameSfx.create([4, 4], 120);
+                const tri_h1 = conductor.createInstrument('triangle', 'oscillators');
+                tri_h1.setVolume(45);
+                const tri_h2 = conductor.createInstrument('triangle', 'oscillators');
+                tri_h2.setVolume(45);
+                tri_h1.note('eighth', 'G5');
+                tri_h2.note('eighth', 'C5');
+                const player = conductor.finish();
+                return player;
+            },
+            gameOver: () => {
+                const conductor = gameSfx.create([4, 4], 120);
+                const tri_h1 = conductor.createInstrument('square', 'oscillators');
+                tri_h1.setVolume(70);
+                tri_h1.note('thirtySecond', 'E1').rest('thirtySecond');
+                tri_h1.note('thirtySecond', 'E1');
+                const player = conductor.finish();
+                return player;
+            },
+            bgmSnake: () => {
+                const conductor = gameSfx.create([4, 4], 120);
+                let tri_h1 = conductor.createInstrument('square', 'oscillators');
+                let tri_h2 = conductor.createInstrument('square', 'oscillators');
+                tri_h1.setVolume(20);
+
+                // 뱀이다~ 뱀이다~
+                tri_h1.note("eighth","G4").rest("sixteenth").note("sixteenth","A4").note("dottedQuarter","A4").note("sixteenth","G4").rest("sixteenth").rest("quarter").note("eighth","G4").rest("sixteenth").note("sixteenth","A4").note("dottedQuarter","A4").note("sixteenth","G4").rest("sixteenth").rest("quarter");
+
+                // 몸에 좋고 맛도 좋은
+                tri_h1.note("sixteenth","G4").rest("sixteenth").note("sixteenth","A4").rest("sixteenth").note("sixteenth","A4").rest("sixteenth").note("eighth","A4").note("sixteenth","E4").rest("sixteenth").note("sixteenth","G4").rest("sixteenth").note("sixteenth","G4").rest("sixteenth").note("eighth","G4");
+
+                // 뱀이다~ 뱀이다~
+                tri_h1.note("eighth","D4").rest("sixteenth").note("sixteenth","E4").note("dottedQuarter","E4").note("sixteenth","D4").rest("sixteenth").rest("quarter").note("eighth","D4").rest("sixteenth").note("sixteenth","E4").note("dottedQuarter","E4").note("sixteenth","D4").rest("sixteenth").rest("quarter");
+
+                // 요놈의 뱀을 사로잡아
+                tri_h1.rest("eighth").note("sixteenth","A3").rest("sixteenth").note("sixteenth","A3").rest("sixteenth").note("sixteenth","A3").rest("sixteenth").note("eighth","A3").rest("eighth").note("eighth","A3").note("eighth","C4").note("eighth","D4").note("sixteenth","E4").rest("sixteenth").note("sixteenth","E4").rest("sixteenth").note("eighth","E4").rest("quarter").rest("quarter");
+
+                // 우리 아빠 보약을 해 드리면
+                tri_h1.note("eighth","E4").note("sixteenth","G4").rest("sixteenth").note("sixteenth","G4").rest("sixteenth").note("sixteenth","G4").rest("sixteenth").note("eighth","G4").rest("eighth").note("eighth","G4").note("eighth","E4").note("eighth","G4").note("sixteenth","A4").rest("sixteenth").note("sixteenth","A4").rest("sixteenth").note("eighth","A4").rest("quarter").rest("quarter");
+
+                // 아이고 우리 딸 착하구나
+                tri_h1.note("sixteenth","C5").rest("sixteenth").note("quarter","C5").note("eighth","B4").note("eighth","A4").note("eighth","A4").note("quarter","A4").note("dottedEighth","G4").note("sixteenth","A4").note("eighth","E4").note("eighth","E4").rest("quarter");
+
+                // 하고 좋아하실 거야~
+                tri_h1.note("eighth","E4").note("sixteenth","Eb4").rest("sixteenth").note("quarter","D4").note("eighth","D4").note("eighth","C4").note("eighth","D4").note("eighth","C4").note("eighth","G4").note("dottedHalf","E4").rest("dottedQuarter").rest("whole");
+
+                // 하지만 안돼요
+                tri_h1.note("thirtySecond","A3").rest("thirtySecond").note("thirtySecond","A3").rest("thirtySecond").note("eighth","A3").note("sixteenth","A3").rest("sixteenth").note("sixteenth","A3").rest("sixteenth").note("eighth","A3").rest("dottedQuarter");
+
+                // 그러지 마세요
+                tri_h1.note("thirtySecond","D4").rest("thirtySecond").note("thirtySecond","E4").rest("thirtySecond").note("eighth","E4").note("sixteenth","E4").rest("sixteenth").note("sixteenth","E4").rest("sixteenth").note("eighth","E4").rest("dottedQuarter");
+
+                // 아빠 참아주세요~
+                tri_h1.note("sixteenth","G4").rest("sixteenth").note("quarter","G4").note("eighth","E4").note("eighth","G4").note("eighth","A4").note("sixteenth","B4").rest("sixteenth").note("eighth","G4").note("half","A4").rest("half");
+
+                // 산과 들의 뱀과 개구리가
+                tri_h1.note("eighth","C5").note("eighth","C5").note("eighth","C5").note("eighth","B4").note("eighth","A4").rest("eighth").note("quarter","A4").note("dottedEighth","G4").note("sixteenth","A4").note("eighth","E4").note("quarter","E4").rest("dottedQuarter");
+
+                // 씨가 말랐대요~
+                tri_h1.note("quarter","G4").note("eighth","G4").note("eighth","E4").note("eighth","G4").note("eighth","A4").note("eighth","B4").note("half","A4").note("quarter","G4").note("eighth","A4").rest("quarter");
+
+                // 싹쓸이 당했대요~
+                tri_h1.note("quarter","G4").note("eighth","G4").note("eighth","E4").note("eighth","G4").note("eighth","A4").note("eighth","B4").note("half","A4").note("quarter","G4").note("eighth","A4").rest("quarter");
+
+                tri_h2.setVolume(10);
+
+                const bass_r1 = (n, o) => {
+                    o.note("eighth",n[0]).note("sixteenth",n[0].substring(0,1)+(parseInt(n[0].substring(1,2))+1)).rest("sixteenth").note("eighth",n[1]).note("sixteenth",n[1].substring(0,1)+(parseInt(n[1].substring(1,2))+1)).rest("sixteenth").note("eighth",n[2]).rest("sixteenth").note("sixteenth",n[2]).note("eighth",n[3]).note("eighth",n[4]);
+                    return o;
+                };
+
+                const bass_r2 = (n, o) => {
+                    o.note("eighth",n).note("sixteenth",n.substring(0,1)+(parseInt(n.substring(1,2))+1)).note("sixteenth",n.substring(0,1)+(parseInt(n.substring(1,2))+1)).note("eighth",n).note("sixteenth",n.substring(0,1)+(parseInt(n.substring(1,2))+1)).note("sixteenth",n.substring(0,1)+(parseInt(n.substring(1,2))+1)).note("eighth",n).note("sixteenth",n.substring(0,1)+(parseInt(n.substring(1,2))+1)).note("sixteenth",n.substring(0,1)+(parseInt(n.substring(1,2))+1)).note("eighth",n).note("sixteenth",n.substring(0,1)+(parseInt(n.substring(1,2))+1)).note("sixteenth",n.substring(0,1)+(parseInt(n.substring(1,2))+1));
+                    return o;
+                };
+
+                tri_h2 = bass_r1(['A1','E1','A1','C2','E2'], tri_h2);
+                tri_h2 = bass_r1(['A1','E1','A1','C2','E2'], tri_h2);
+                tri_h2 = bass_r1(['A1','A1','E1','G1','B1'], tri_h2);
+                tri_h2 = bass_r1(['E1','B0','E1','G1','B1'], tri_h2);
+                tri_h2 = bass_r1(['E1','B0','E1','G1','B1'], tri_h2);
+
+                tri_h2 = bass_r1(['A1','E1','A1','C2','E2'], tri_h2);
+                tri_h2 = bass_r1(['C2','G1','C2','E2','G2'], tri_h2);
+                tri_h2 = bass_r1(['E1','B0','E1','G1','B1'], tri_h2);
+                tri_h2 = bass_r1(['A1','E1','A1','C2','E2'], tri_h2);
+
+                tri_h2 = bass_r1(['A1','E1','A1','C2','E2'], tri_h2);
+                tri_h2 = bass_r1(['E1','B0','E1','G1','B1'], tri_h2);
+                tri_h2 = bass_r1(['D1','A0','D1','F1','A1'], tri_h2);
+                tri_h2 = bass_r1(['E1','B0','E1','G1','B1'], tri_h2);
+                tri_h2 = bass_r1(['E2','B1','E2','G2','B2'], tri_h2);
+
+                tri_h2 = bass_r2('A1', tri_h2);
+                tri_h2 = bass_r2('C2', tri_h2);
+                tri_h2 = bass_r2('E1', tri_h2);
+                tri_h2 = bass_r2('A1', tri_h2);
+                tri_h2 = bass_r2('A1', tri_h2);
+                tri_h2 = bass_r2('C2', tri_h2);
+                tri_h2 = bass_r2('E1', tri_h2);
+                tri_h2 = bass_r2('A1', tri_h2);
+                tri_h2 = bass_r2('E1', tri_h2);
+                tri_h2 = bass_r2('A1', tri_h2);
+
+                const player = conductor.finish();
+                player.loop(true);
+                return player;
+            }
+        };
+
+        let sfxEatFood;
+        let sfxGameOver;
+        let bgmSnake;
+
+        let boxSize = 15;
+        let speed = 150; // 초기 속도 설정
+        let moveCount = 0;
+
+        let snake = [];
+        let dx = boxSize;
+        let dy = 0;
+        let foodX;
+        let foodY;
+        let score = 0;
+        let highScore = localStorage.getItem("highScore") || 0;
+        let gameLoop;
+        let isSfxEnabled = true;
+        let isBgmPlaying = false;
+
+        document.getElementById("highScore").innerText = highScore;
+
+        function toggleSfx(s) {
+            if (isSfxEnabled) {
+                toggleSfxEnable.style.display = "none";
+                toggleSfxDisable.style.display = "block";
+                if (bgmSnake && isBgmPlaying) {
+                    bgmSnake.pause();
+                    isBgmPlaying = false;
+                }
+            } else {
+                toggleSfxEnable.style.display = "block";
+                toggleSfxDisable.style.display = "none";
+                if (bgmSnake && !isBgmPlaying) {
+                    bgmSnake.play();
+                    isBgmPlaying = true;
+                }
+            }
+            isSfxEnabled ? isSfxEnabled = false : isSfxEnabled = true;
+        }
+
+        function initToggleSfx() {
+            if (isSfxEnabled)
+                toggleSfxDisable.style.display = "none";
+            else
+                toggleSfxEnable.style.display = "none";
+        }
+        
+        function clearCanvas() {
+            ctx.fillStyle = isDarkMode ? "#505050" : "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = isDarkMode ? "#333333" : "#e0e0e0";
+
+            for (let x = 0; x < canvas.width; x += boxSize) {
+                for (let y = 0; y < canvas.height; y += boxSize) {
+                    ctx.strokeRect(x, y, boxSize, boxSize);
+                }
+            }
+        }
+
+        function setCanvasSize() {
+            let boxCount = parseInt(document.getElementById("boxCount").value);
+            const canvasWidth = canvas.clientWidth;
+            const canvasHeight = canvas.clientHeight;
+
+            if (boxCount == 10) {
+                boxSize = 33;
+            } else if (boxCount == 20) {
+                boxSize = 18;
+            }
+
+            // 캔버스 크기 조절
+            canvas.width = boxCount * boxSize;
+            canvas.height = boxCount * boxSize;
+            
+
+            if (boxCount == '10') {
+                canvas.style.width = "330px";
+                canvas.style.height = "330px";
+            } else if (boxCount == '20') {
+                canvas.style.width = "330px";
+                canvas.style.height = "330px";
+            } else if (boxCount == '40') {
+                canvas.style.width = "600px";
+                canvas.style.height = "600px";
+            } else {
+                canvas.style.width = "450px";
+                canvas.style.height = "450px";
+            }
+            
+
+            // 캔버스 크기 조절 후 폰트 크기 조정 (옵션)
+            ctx.font = `${Math.max(16, Math.floor(canvas.width / 20))}px Noto Sans KR`;
+
+            // 게임 초기화
+            resetGameState();
+        }
+
+        let snakeHeadImg;
+
+        function createSnakeHeadImage() {
+            const svgElement = document.getElementById('snakeHeadSvg');
+            const svgString = new XMLSerializer().serializeToString(svgElement);
+            const svg64 = btoa(svgString);
+            const image64 = 'data:image/svg+xml;base64,' + svg64;
+            snakeHeadImg = new Image();
+            snakeHeadImg.src = image64;
+            return new Promise((resolve) => {
+                snakeHeadImg.onload = resolve;
+            });
+        }
+
+        function drawSnakePart(snakePart, isHead) {
+            if (isHead && snakeHeadImg) {
+                ctx.drawImage(snakeHeadImg, snakePart.x, snakePart.y, boxSize, boxSize);
+            } else {
+                ctx.fillStyle = "lightgreen";
+                ctx.strokeStyle = "darkgreen";
+                ctx.fillRect(snakePart.x, snakePart.y, boxSize, boxSize);
+                ctx.strokeRect(snakePart.x, snakePart.y, boxSize, boxSize);
+            }
+        }
+
+        function drawSnake() {
+            snake.forEach((part, index) => drawSnakePart(part, index === 0));
+        }
+
+        function createFood() {
+            foodX = Math.round((Math.random() * (canvas.width - boxSize)) / boxSize) * boxSize;
+            foodY = Math.round((Math.random() * (canvas.height - boxSize)) / boxSize) * boxSize;
+
+            snake.forEach(part => {
+                if (part.x === foodX && part.y === foodY) createFood();
+            });
+        }
+
+        // 먹이 : 빨강 박스
+        // function drawFood() {
+        //     ctx.fillStyle = "red";
+        //     ctx.strokeStyle = "darkred";
+        //     ctx.fillRect(foodX, foodY, boxSize, boxSize);
+        //     ctx.strokeRect(foodX, foodY, boxSize, boxSize);
+        // }
+        
+        // 먹이 : 빨간 사과
+        function drawFood() {
+            const appleEmoji = "🍎"; // 빨간 사과 이모지 (HTML Code: &#127822;)
+
+            ctx.font = `${boxSize}px Arial`; // 사과의 크기를 셋팅
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(appleEmoji, foodX + boxSize / 2, foodY + boxSize / 2); // 사과를 그립니다
+        }
+
+
+        function moveSnake() {
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+
+            if (snake[0].x === foodX && snake[0].y === foodY) {
+                score += 10;
+                document.getElementById("currentScore").innerText = score;
+                if (isSfxEnabled) sfxEatFood.play();
+                createFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function hasGameEnded() {
+            for (let i = 4; i < snake.length; i++) {
+                if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
+            }
+
+            const hitLeftWall = snake[0].x < 0;
+            const hitRightWall = snake[0].x > canvas.width - boxSize;
+            const hitTopWall = snake[0].y < 0;
+            const hitBottomWall = snake[0].y > canvas.height - boxSize;
+
+            return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall;
+        }
+
+        function changeDirection(event) {
+            const LEFT_KEY = 37;
+            const RIGHT_KEY = 39;
+            const UP_KEY = 38;
+            const DOWN_KEY = 40;
+
+            const keyPressed = event.keyCode;
+            const goingUp = dy === -boxSize;
+            const goingDown = dy === boxSize;
+            const goingRight = dx === boxSize;
+            const goingLeft = dx === -boxSize;
+
+            if (keyPressed === LEFT_KEY && !goingRight) {
+                dx = -boxSize;
+                dy = 0;
+                moveCount++;
+            }
+            if (keyPressed === UP_KEY && !goingDown) {
+                dx = 0;
+                dy = -boxSize;
+                moveCount++;
+            }
+            if (keyPressed === RIGHT_KEY && !goingLeft) {
+                dx = boxSize;
+                dy = 0;
+                moveCount++;
+            }
+            if (keyPressed === DOWN_KEY && !goingUp) {
+                dx = 0;
+                dy = boxSize;
+                moveCount++;
+            }
+
+            document.getElementById("currentMove").innerText = moveCount;
+        }
+
+        function gameOver() {
+            enableScroll();
+            if (isSfxEnabled) sfxGameOver.play();
+            if (isSfxEnabled && isBgmPlaying) {
+                bgmSnake.stop(false);
+                isBgmPlaying = false;
+            }
+            clearInterval(gameLoop);
+            
+            const boxCount = parseInt(document.getElementById("boxCount").value);
+            const highScore = getHighScore(boxCount);
+            
+            if (score > highScore) {
+                setHighScore(boxCount, score);
+                updateHighScoreDisplay();
+            }
+            
+            document.getElementById("finalScore").innerText = score;
+            showModal();
+        }
+
+        function showModal() {
+            modal.style.display = "flex";
+        }
+
+        function resetGameState() {
+            const centerX = Math.floor(canvas.width / (2 * boxSize)) * boxSize;
+            const centerY = Math.floor(canvas.height / (2 * boxSize)) * boxSize;
+            snake = [
+                { x: centerX, y: centerY },
+                { x: centerX - boxSize, y: centerY },
+                { x: centerX - 2 * boxSize, y: centerY },
+                { x: centerX - 3 * boxSize, y: centerY }
+            ];
+
+            dx = boxSize;
+            dy = 0;
+            createFood();
+        }
+
+        function updateSpeed() {
+            speed = Math.max(150 - Math.floor(score / 100) * 5, 50);
+            const displaySpeed = 200 - speed;
+            document.getElementById("currentSpeed").innerText = displaySpeed;
+        }
+
+        function main() {
+            if (hasGameEnded()) {
+                gameOver();
+                return;
+            }
+
+            clearCanvas();
+            drawFood();
+            moveSnake();
+            drawSnake();
+            updateSpeed();
+        }
+
+        async function initGame() {
+            await createSnakeHeadImage();
+            setCanvasSize();
+            resetGameState();
+
+            modal.style.display = "none";
+            score = 0;
+            moveCount = 0;
+            document.getElementById("currentScore").innerText = score;
+            document.getElementById("currentMove").innerText = moveCount;
+            document.getElementById("currentSpeed").innerText = 50;
+
+            updateHighScoreDisplay();
+
+            if (gameLoop) clearInterval(gameLoop);
+            gameLoop = setInterval(main, speed);
+        }
+
+        function startGame() {
+            initGame();
+            sfxEatFood = gameSfx.eatFood();
+            sfxGameOver = gameSfx.gameOver();
+            if (isSfxEnabled && !isBgmPlaying) {
+                bgmSnake = gameSfx.bgmSnake();
+                bgmSnake.play();
+                isBgmPlaying = true;
+            }
+            disableScroll();
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function quitGame() {
+            modal.style.display = "none";
+            clearInterval(gameLoop);
+            clearCanvas();
+            drawInitialState();
+        }
+
+        function drawInitialState() {
+            const boxCount = parseInt(document.getElementById("boxCount").value);
+            let fontSize = boxCount == 10 ? 13 : 16;
+            
+            clearCanvas();
+            
+            ctx.font = `${Math.max(fontSize, Math.floor(canvas.width / 20))}px Noto Sans KR`;
+            ctx.fillStyle = isDarkMode ? "white" : "black";
+            ctx.textAlign = "center";
+            ctx.fillText("스네이크 게임", canvas.width / 2, canvas.height / 2 - boxCount);
+            ctx.fillText("시작 버튼을 눌러 게임을 시작하세요", canvas.width / 2, canvas.height / 2 + boxCount);
+            ctx.fillText("게임시작: SpaceBar, 조종: 방향키", canvas.width / 2, canvas.height / 2 + (boxCount*3));
+        }
+
+        function isMobile() {
+            return window.innerWidth <= 810;
+        }
+
+        function showMobileControls() {
+            document.getElementById('mobileControls').style.display = isMobile() ? 'flex' : 'none';
+        }
+
+        function addMobileControlListeners() {
+            document.getElementById('upBtn').addEventListener('click', () => changeDirection({ keyCode: 38 }));
+            document.getElementById('downBtn').addEventListener('click', () => changeDirection({ keyCode: 40 }));
+            document.getElementById('leftBtn').addEventListener('click', () => changeDirection({ keyCode: 37 }));
+            document.getElementById('rightBtn').addEventListener('click', () => changeDirection({ keyCode: 39 }));
+        }
+
+        // 최고점수 관련 함수
+        function getHighScore(boxCount) {
+            const highScores = JSON.parse(localStorage.getItem("highScores")) || {};
+            return highScores[boxCount] || 0;
+        }
+
+        function setHighScore(boxCount, score) {
+            const highScores = JSON.parse(localStorage.getItem("highScores")) || {};
+            highScores[boxCount] = Math.max(highScores[boxCount] || 0, score);
+            localStorage.setItem("highScores", JSON.stringify(highScores));
+        }
+
+        function updateHighScoreDisplay() {
+            const boxCount = parseInt(document.getElementById("boxCount").value);
+            const highScore = getHighScore(boxCount);
+            document.getElementById("highScore").innerText = highScore;
+        }
+
+        function preventDefault(e) {
+            e.preventDefault();
+        }
+
+        function disableScroll() {
+            document.body.addEventListener('touchmove', preventDefault, { passive: false });
+        }
+
+        function enableScroll() {
+            document.body.removeEventListener('touchmove', preventDefault);
+        }
+
+        document.addEventListener("keydown", changeDirection);
+
+        window.addEventListener("load", function() {
+            setCanvasSize();
+            drawInitialState();
+            showMobileControls();
+            addMobileControlListeners();
+            initToggleSfx();
+            updateHighScoreDisplay();
+        });
+
+        // 박스 사이즈 변경에 따른 이벤트리스너
+        boxCountSelect.addEventListener("change", () => {
+            setCanvasSize();
+            drawInitialState();
+            updateHighScoreDisplay();
+        });
+
+
+        clearCanvas();
+        drawInitialState();
+
+        window.addEventListener("keydown", function(e) {
+            if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) {
+                e.preventDefault();
+            }
+            if (e.key.toLowerCase() === 'h') changeDirection({ keyCode: 37 }); // Left
+            if (e.key.toLowerCase() === 'j') changeDirection({ keyCode: 40 }); // Down
+            if (e.key.toLowerCase() === 'k') changeDirection({ keyCode: 38 }); // Up
+            if (e.key.toLowerCase() === 'l') changeDirection({ keyCode: 39 }); // Right
+
+            if (event.code === 'Space') startGame(); // 스페이스바 누르면 게임시작
+        }, false);
+
+        // 박스사이즈 select box 재설정
+        function updateSelectOptions() {
+            boxCountSelect.innerHTML = "";
+
+            const options = [10, 20, 30, 40];
+            let defaultOption = 30;
+
+            if (window.innerWidth < 480) {
+                // 모바일 환경에서는 기본값을 20으로 설정
+                defaultOption = 20;
+                // 옵션 제한 (10, 20만 표시)
+                options.splice(2); // 30, 50 삭제
+            }
+
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.text = `${option} x ${option}`;
+
+                if (option ===    
+            defaultOption) {
+                optionElement.selected   
+            = true;
+                }
+
+                boxCountSelect.appendChild(optionElement);
+            });
+        }
+
+        // 모든 버튼 요소를 선택
+        const buttons = document.querySelectorAll(".controls-btn");
+
+        buttons.forEach(button => {
+            let startX, startY;
+
+            button.addEventListener("touchstart", function(e) {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+            });
+
+            button.addEventListener("touchend", function(e) {
+                const touch = e.changedTouches[0];
+                const endX = touch.clientX;
+                const endY = touch.clientY;
+
+                // 터치가 버튼 영역을 벗어나지 않으면 버튼이 동작하게 하기
+                if (Math.abs(startX - endX) < button.offsetWidth && Math.abs(startY - endY) < button.offsetHeight) {
+                    // 버튼 동작
+                    button.click();
+                    moveCount = moveCount -1;
+                }
+            });
+        });
+
+
+
+
+        // 페이지 로드 시 초기 설정
+        updateSelectOptions();
+    </script>
+
+</body>
+</html>
